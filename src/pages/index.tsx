@@ -18,11 +18,11 @@ const HomePage: Page = () => {
   const [loading, setLoading] = React.useState(false)
 
   const { data: myShortLinks, mutate } = useSWR<LSLink[]>(
-    'my-bsmnt-links',
+    'my-short-links',
     () => {
-      const myBsmntLinksLS = window.localStorage.getItem('my-bsmnt-links')
-      if (myBsmntLinksLS) {
-        return JSON.parse(myBsmntLinksLS) as LSLink[]
+      const myShortLinksLS = window.localStorage.getItem('my-short-links')
+      if (myShortLinksLS) {
+        return JSON.parse(myShortLinksLS) as LSLink[]
       }
       return []
     }
@@ -35,7 +35,7 @@ const HomePage: Page = () => {
       )
       if (alreadyExists) return
       localStorage.setItem(
-        'my-bsmnt-links',
+        'my-short-links',
         JSON.stringify([successData, ...(myShortLinks ?? [])])
       )
       mutate([successData, ...(myShortLinks ?? [])])
@@ -81,7 +81,7 @@ const HomePage: Page = () => {
 
   return (
     <div>
-      <h1>bsmnt URL Shortener</h1>
+      <h1>URL Shortener</h1>
       <br />
       <p>
         <i>Shorten your URL!</i>
@@ -90,7 +90,7 @@ const HomePage: Page = () => {
         Make something like{' '}
         <code>
           <small>
-            https://basementstudio.notion.site/basement-joins-forces-with-the-DigitalPal-team-379b0b454b63405296d0dea4ee0917d9
+            https://lab.theteleporter.site/experiments/logo-experiments
           </small>
         </code>{' '}
         look like{' '}
@@ -176,7 +176,7 @@ const HomePage: Page = () => {
       {myShortLinks && (
         <>
           <br />
-          <h2>My bsmnt links:</h2>
+          <h2>My short links:</h2>
           <table>
             <thead>
               <tr>
