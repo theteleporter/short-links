@@ -1,49 +1,23 @@
 import { nanoid } from 'nanoid'
+import Redis from 'ioredis'
 
-if (!process.env.REDIS_REST_URL) throw new Error('REDIS_REST_URL is not set.')
-const redisUrl = new URL(process.env.REDIS_REST_URL)
+if (!process.env.REDIS_URL) throw new Error('REDIS_URL is not set.')
 
-const redisWriteToken = process.env.REDIS_REST_TOKEN
-if (!redisWriteToken) throw new Error('REDIS_REST_TOKEN is not set.')
-
-const redisReadToken = process.env.REDIS_REST_TOKEN_READ
-if (!redisReadToken) throw new Error('REDIS_REST_TOKEN_READ is not set.')
+const redis = new Redis(process.env.REDIS_URL)
 
 export async function createShortLink(original: string, suggestion?: string) {
   const key = suggestion || nanoid(6)
   const originalUrl = new URL(original)
 
-  const redisUrlClone = new URL(redisUrl)
-
-  if (suggestion) {
-    redisUrlClone.pathname = `/get/${key}`
-    const redisRes = await fetch(redisUrlClone.href, {
-      headers: { Authorization: `Bearer ${redisReadToken}` }
-    })
-    const { result } = (await redisRes.json()) as { result: string }
-    if (typeof result === 'string') {
-      throw new Error('Suggested ID already exists.')
-    }
+  // Check if the key already exists
+  const exists = await redis.exists(key)
+  if (exists) {
+    throw new Error('Suggested ID already exists.')
   }
 
-  redisUrlClone.pathname = `/set/${key}`
-
-  const redisRes = await fetch(redisUrlClone.href, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${redisWriteToken}` },
-    body: originalUrl.href
-  })
-
-  const { result, error } = (await redisRes.json()) as {
-    result?: string
-    error?: string
-  }
-
-  if (error) {
-    throw new Error(error)
-  }
-
-  if (typeof result !== 'string') {
+  // Set the short link
+  const result = await redis.set(key, originalUrl.href)
+  if (result !== 'OK') {
     throw new Error('Failed to create short link.')
   }
 
@@ -51,15 +25,7 @@ export async function createShortLink(original: string, suggestion?: string) {
 }
 
 export async function getShortLinkValue(key: string) {
-  const redisUrlClone = new URL(redisUrl)
-  redisUrlClone.pathname = `/get/${key}`
-
-  const redisRes = await fetch(redisUrlClone.href, {
-    headers: { Authorization: `Bearer ${redisReadToken}` }
-  })
-
-  const { result } = (await redisRes.json()) as { result: string }
-
+  const result = await redis.get(key)
   if (typeof result !== 'string') {
     throw new Error('Short link not found.')
   }
