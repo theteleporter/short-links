@@ -1,4 +1,4 @@
-# bsmnt-links
+# SHORT-LINKS
 
 A free URL shortener to deploy with your own domain. Made with Next.js, Upstash, and deployed to Vercel. All for free.
 
